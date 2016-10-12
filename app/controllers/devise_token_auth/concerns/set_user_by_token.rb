@@ -17,10 +17,9 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
   # user auth
   def set_user_by_token(mapping=nil)
-    
     # determine target authentication class
     rc = resource_class(mapping)
-    
+
     # no default user defined
     return unless rc
 
@@ -28,12 +27,12 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     uid_name = DeviseTokenAuth.headers_names[:'uid']
     access_token_name = DeviseTokenAuth.headers_names[:'access-token']
     client_name = DeviseTokenAuth.headers_names[:'client']
-    
+
     # parse header for values necessary for authentication
     uid        = request.headers[uid_name] || params[uid_name]
     @token     ||= request.headers[access_token_name] || params[access_token_name]
     @client_id ||= request.headers[client_name] || params[client_name]
-    
+
     # client_id isn't required, set to 'default' if absent
     @client_id ||= 'default'
 
@@ -46,7 +45,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
         @resource.create_new_auth_token
       end
     end
-    
+
     # user has already been found and authenticated
     return @resource if @resource and @resource.class == rc
 
@@ -60,9 +59,9 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
     # mitigate timing attacks by finding by uid instead of auth token
     user = uid && rc.find_by_uid(uid)
-    
+
     if user && user.valid_token?(@token, @client_id)
-      
+
       # sign_in with bypass: true will be deprecated in the next version of Devise
       if self.respond_to? :bypass_sign_in
         bypass_sign_in(user, scope: :user)
@@ -80,22 +79,21 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
   def update_auth_header
     # cannot save object if model has invalid params
-    
     return unless @resource and @resource.valid? and @client_id
 
     # Generate new client_id with existing authentication
     @client_id = nil unless @used_auth_by_token
     
     if @used_auth_by_token and not DeviseTokenAuth.change_headers_on_each_request
-      
       # should not append auth header if @resource related token was
       # cleared by sign out in the meantime
       return if @resource.reload.tokens[@client_id].nil?
       
       auth_header = @resource.build_auth_header(@token, @client_id)
-      
+
       # update the response header
       response.headers.merge!(auth_header)
+
     else
 
       # Lock the user record during any auth_header updates to ensure
