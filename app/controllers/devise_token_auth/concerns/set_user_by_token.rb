@@ -61,7 +61,6 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     user = uid && rc.find_by_uid(uid)
 
     if user && user.valid_token?(@token, @client_id)
-
       # sign_in with bypass: true will be deprecated in the next version of Devise
       if self.respond_to? :bypass_sign_in
         bypass_sign_in(user, scope: :user)
@@ -83,12 +82,12 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
     # Generate new client_id with existing authentication
     @client_id = nil unless @used_auth_by_token
-    
+
     if @used_auth_by_token and not DeviseTokenAuth.change_headers_on_each_request
       # should not append auth header if @resource related token was
       # cleared by sign out in the meantime
       return if @resource.reload.tokens[@client_id].nil?
-      
+
       auth_header = @resource.build_auth_header(@token, @client_id)
 
       # update the response header
