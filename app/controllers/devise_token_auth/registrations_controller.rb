@@ -25,7 +25,8 @@ module DeviseTokenAuth
       @resource.uid = @resource.username
 
       @resource.child = params[:child]
-      @resource.current_unit = params[:unit]
+      @resource.current_unit = current_user.current_unit
+      @resource.creation_user = current_user.id
 
       # give redirect value from params priority
       @redirect_url = params[:confirm_success_url]
